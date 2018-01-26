@@ -42,7 +42,7 @@ searchterm   <- 'courage' # puppies!
 # Note: the larger the range you specify, the more videos you will download. 
 # The more videos you choose to download, the longer this script will take to run. 
  
-video_vector <- c(1, 2) # the first 50 videos
+video_vector <- c(1, 50) # the first 50 videos
 ```
 
 ## DO NOT EDIT
