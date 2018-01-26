@@ -1,0 +1,129 @@
+---
+title: "Get Videos from the National Archives"
+subtitle: "Kyle Kurkela"
+author: "kyleakurkela@gmail.com"
+output: html_notebook
+---
+
+# Library
+
+Library the R packages `RCurl` and `jsonlite`. Note: if you recieve an error in this code chunk, you will need to install the `RCurl` and `jsonlite` packages in your version of Rstudio.
+
+```{r setup, warning=FALSE, message=FALSE}
+library(RCurl)
+library(jsonlite)
+```
+
+# User Input
+
+Please edit the code in the code chunk below.
+
+```{r}
+# searchterm
+#
+# searchterm is the keyword(s) that you would like to search for. 
+#
+# Examples:
+#
+#   searchterm <- 'wedding day'
+#   searchterm <- 'car crash'
+#   searchterm <- 'may be disturbing'
+#   searchterm <- 'puppies'
+ 
+searchterm   <- 'courage' # puppies!
+ 
+# video_vector
+# 
+# video_vector is a vector specifying the range of videos you want to download from the archive. 
+#
+# For example, if you specify the vector c(1,50), you will download videos #1 - #50 for a total of 50 videos.
+# You do not, however, need to start from 1. As another example, c(51,100) will downloads video #51 - #100.
+#
+# Note: the larger the range you specify, the more videos you will download. 
+# The more videos you choose to download, the longer this script will take to run. 
+ 
+video_vector <- c(1, 2) # the first 50 videos
+```
+
+## DO NOT EDIT
+
+You should not need to edit any of the code below this point!
+
+## Query results
+
+```{r}
+# initalize variables
+query_id <- 0
+number_of_hits <- 0
+results <- list()
+number.of.queries <- 0
+ 
+# keep finding videos until number_of_hits > the maximum of video_vector
+while(max(video_vector) > number_of_hits){
+  
+  # advance the query counter
+  number.of.queries <- number.of.queries + 1  
+  
+  # if this is the first query, do NOT input the query_id into the URL. If this is any other query,
+  # input the query_id into the url
+  if (query_id == 0){
+    current_url <- paste0("http://archive.org/details/tv?q=%22",searchterm,"%22&output=json")
+  } else{
+    current_url <- paste("http://archive.org/details/tv?q=%22",searchterm,"%22&output=json&start=",query_id,sep="")
+  }
+  
+  # get the JSON from the archive and remove the pesky backslash spaces (i.e., "\ ") that fromJSON doesn't like
+  results[[number.of.queries]] <- gsub("\\\\ ", "", getURL(current_url))
+  
+  # The number of found videos
+  number_of_hits <- number_of_hits + nrow(fromJSON(results[[number.of.queries]]))
+  
+  # Updating the user with the number of queries and number of hits
+  cat(paste("queries:", number.of.queries, " ", "hits:", number_of_hits, "\n"))
+  
+  # advance query_id. The archive queries in steps of 50
+  query_id <- query_id + 50
+  
+}
+```
+
+## Process the data
+```{r}
+results.as.dfs <- lapply(results, fromJSON) # convert jsons --> data.frames
+columns        <- lapply(results.as.dfs, colnames) # find the column names of all data.frames
+columns        <- Reduce(intersect, columns) # find the intersection
+
+bigtable <- c() # initalize
+
+# for each result...
+for(i in 1:length(results)){
+  
+     temptable <- fromJSON(results[[i]]) # temporary table
+     temptable <- temptable[,columns] # should only grab the columns that are available to all data.frames
+     bigtable  <- rbind(bigtable, temptable) # bind it up!
+     
+}
+```
+
+## Download data
+```{r}
+video_selection <- bigtable
+
+for(i in video_vector[1]:video_vector[2]){
+  
+     # let user know what video # we are on
+     cat(paste("Video #",i,"\n"))
+  
+     # download the file!
+     download.file(video_selection[i,]$video,
+                   destfile=paste(video_selection[i,]$identifier,"mp4",sep="."))
+
+}
+
+# force all of the columns to be character arrays
+video_selection <- apply(video_selection, 2, as.character)
+
+# finally, write to a csv file in the downloads folder
+write.csv(video_selection, file=paste0("~/Downloads/", searchterm,'_video_details.csv'))
+```
+
