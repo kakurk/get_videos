@@ -30,7 +30,7 @@ Please edit the code in the code chunk below.
 #   searchterm <- 'may be disturbing'
 #   searchterm <- 'puppies'
  
-searchterm   <- 'courage' # puppies!
+searchterm   <- 'puppies' # puppies!
  
 # video_vector
 # 
