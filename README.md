@@ -8,4 +8,4 @@ To run the script, you simply need to edit the first code chunk. Specifically, e
 
 The script will download videos to your `~/Downloads` folder.
 
-Report any and all bugs/errors you encounter to my email (kyleakurkela@gmail.com) or message me on slack. Please tell me that `searchterm` you used and the `video_vector`.
+Report any and all bugs/errors you encounter to my email (kyleakurkela@gmail.com) or message me on slack. Please tell me the `searchterm` you used and the `video_vector`.
